@@ -37,7 +37,7 @@ jobs:
           echo "release_notes=$notes" >> $GITHUB_ENV
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v1.1.0
         with:
           tag_name: ${{ env.next_version }}
           release_name: "Release ${{ env.next_version }}"
