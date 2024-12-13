@@ -26,6 +26,7 @@ jobs:
           next_patch=$((patch + 1))
 
           next_version="v${major}.${minor}.${next_patch}"
+          echo "next_version=$next_version" >> $GITHUB_ENV
 
       - name: Create Tag
         run: |
