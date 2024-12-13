@@ -36,12 +36,19 @@ jobs:
       - name: Generate Release Notes
         id: release_notes
         run: |
-          notes=$(git log $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --pretty=format:"- %s")
-          echo "Raw Notes:"
-          echo "$notes"
-          if [ -z "$(echo $notes | tr -d '[:space:]')" ]; then
-            notes="Initial release."
+          # Check if there are any tags
+          if git describe --tags --abbrev=0 >/dev/null 2>&1; then
+            # Use commits since the last tag
+            range=$(git describe --tags --abbrev=0)..HEAD
+          else
+            # Use all commits since the beginning
+            range=HEAD
           fi
+
+          # Generate release notes
+          notes=$(git log $range --pretty=format:"- %s")
+
+          # Save the notes to an environment variable
           echo "release_notes=$notes" >> $GITHUB_ENV
 
       - name: Create GitHub Release
