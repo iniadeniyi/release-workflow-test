@@ -18,9 +18,14 @@ jobs:
         run: |
           # Get the latest tag or default to v0.0.0
           latest=$(git describe --tags `git rev-list --tags --max-count=1` || echo "v0.0.0")
-          # Increment patch version (e.g., v1.0.0 -> v1.0.1)
-          next=$(echo $latest | awk -F. '{$NF+=1; print $0}' | sed 's/ //g')
-          echo "next_version=$next" >> $GITHUB_ENV
+
+          major=$(echo $latest | awk -F. '{print $1}' | tr -d 'v')
+          minor=$(echo $latest | awk -F. '{print $2}')
+          patch=$(echo $latest | awk -F. '{print $3}')
+
+          next_patch=$((patch + 1))
+
+          next_version="v${major}.${minor}.${next_patch}"
 
       - name: Create Tag
         run: |
@@ -33,7 +38,10 @@ jobs:
         id: release_notes
         run: |
           # Get logs since the last tag, or all logs if no tags exist
-          notes=$(git log $(git describe --tags --abbrev=0 2>/dev/null || echo "HEAD")..HEAD --oneline || echo "Initial release.")
+          notes=$(git log $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --pretty=format:"- %s")
+          if [ -z "$notes" ]; then
+            notes="Initial release."
+          fi
           echo "release_notes=$notes" >> $GITHUB_ENV
 
       - name: Create GitHub Release
