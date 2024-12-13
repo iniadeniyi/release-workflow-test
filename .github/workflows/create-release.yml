@@ -12,19 +12,17 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Generate Next Version Tag
         id: versioning
         run: |
-          # Get the latest tag or default to v0.0.0
           latest=$(git describe --tags `git rev-list --tags --max-count=1` || echo "v0.0.0")
-
           major=$(echo $latest | awk -F. '{print $1}' | tr -d 'v')
           minor=$(echo $latest | awk -F. '{print $2}')
           patch=$(echo $latest | awk -F. '{print $3}')
-
           next_patch=$((patch + 1))
-
           next_version="v${major}.${minor}.${next_patch}"
           echo "next_version=$next_version" >> $GITHUB_ENV
 
@@ -38,9 +36,10 @@ jobs:
       - name: Generate Release Notes
         id: release_notes
         run: |
-          # Get logs since the last tag, or all logs if no tags exist
           notes=$(git log $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --pretty=format:"- %s")
-          if [ -z "$notes" ]; then
+          echo "Raw Notes:"
+          echo "$notes"
+          if [ -z "$(echo $notes | tr -d '[:space:]')" ]; then
             notes="Initial release."
           fi
           echo "release_notes=$notes" >> $GITHUB_ENV
