@@ -15,6 +15,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Fetch all history and tags
+        run: |
+          git fetch --prune --unshallow
+          git fetch --tags
+
       - name: Generate Next Version Tag
         id: versioning
         run: |
@@ -36,20 +41,32 @@ jobs:
       - name: Generate Release Notes
         id: release_notes
         run: |
+          # Ensure all tags are fetched
+          git fetch --tags
+
           # Check if there are any tags
           if git describe --tags --abbrev=0 >/dev/null 2>&1; then
-            # Use commits since the last tag
             range=$(git describe --tags --abbrev=0)..HEAD
           else
-            # Use all commits since the beginning
             range=HEAD
           fi
+
+          # Debug: Print the range
+          echo "Range: $range"
 
           # Generate release notes
           notes=$(git log $range --pretty=format:"- %s")
 
+          # Debug: Check notes content
+          echo "Generated notes:"
+          echo "$notes"
+
           # Save the notes to an environment variable
-          echo "release_notes=$notes" >> $GITHUB_ENV
+          echo "release_notes=$(printf '%s\n' "$notes")" >> $GITHUB_ENV
+
+      - name: Debug Release Notes
+        run: |
+          echo "Release Notes: ${{ env.release_notes }}"
 
       - name: Create GitHub Release
         uses: actions/create-release@v1.1.0
