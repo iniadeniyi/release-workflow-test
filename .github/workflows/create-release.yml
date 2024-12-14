@@ -52,11 +52,18 @@ jobs:
           # Ensure all tags are fetched
           git fetch --tags
 
-          # Check if there are any tags
+          # Identify the previous tag
           if git describe --tags --abbrev=0 >/dev/null 2>&1; then
-            range=$(git describe --tags --abbrev=0)..HEAD
+            previous_tag=$(git describe --tags `git rev-list --tags --skip=1 --max-count=1`)
           else
-            range=HEAD
+            previous_tag=""
+          fi
+
+          # Determine the range for the release notes
+          if [ -n "$previous_tag" ]; then
+            range="$previous_tag..${{ env.next_version }}"
+          else
+            range="${{ env.next_version }}"
           fi
 
           # Debug: Print the range
