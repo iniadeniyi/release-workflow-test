@@ -15,9 +15,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch all history and tags
+      - name: Ensure Full Git History
         run: |
-          git fetch --prune --unshallow
+          # Check if the repository is shallow
+          if [ -f .git/shallow ]; then
+            echo "Repository is shallow. Fetching full history..."
+            git fetch --prune --unshallow
+          else
+            echo "Repository is already fully cloned."
+          fi
+
+          # Fetch all tags
           git fetch --tags
 
       - name: Generate Next Version Tag
